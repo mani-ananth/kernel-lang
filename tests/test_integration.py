@@ -137,3 +137,87 @@ def test_lower_returns_string():
   source = k.lower()
   assert isinstance(source, str)
   assert "def k(" in source
+
+
+def test_scalar_mul():
+  """Scalar multiplication: x * 2.0."""
+  @mini_pallas.kernel
+  def k(x, o):
+    o[...] = x[...] * 2.0
+
+  x = np.array([1.0, 2.0, 3.0])
+  out = np.zeros(3)
+  k(x, out)
+  np.testing.assert_array_equal(out, [2.0, 4.0, 6.0])
+
+
+def test_scalar_add():
+  """Scalar addition: x + 1.0."""
+  @mini_pallas.kernel
+  def k(x, o):
+    o[...] = x[...] + 1.0
+
+  x = np.array([1.0, 2.0, 3.0])
+  out = np.zeros(3)
+  k(x, out)
+  np.testing.assert_array_equal(out, [2.0, 3.0, 4.0])
+
+
+def test_scalar_on_left():
+  """Scalar on left side: 2.0 * x."""
+  @mini_pallas.kernel
+  def k(x, o):
+    o[...] = 2.0 * x[...]
+
+  x = np.array([1.0, 2.0, 3.0])
+  out = np.zeros(3)
+  k(x, out)
+  np.testing.assert_array_equal(out, [2.0, 4.0, 6.0])
+
+
+def test_scalar_sub_left():
+  """Scalar on left of subtraction: 10.0 - x."""
+  @mini_pallas.kernel
+  def k(x, o):
+    o[...] = 10.0 - x[...]
+
+  x = np.array([1.0, 2.0, 3.0])
+  out = np.zeros(3)
+  k(x, out)
+  np.testing.assert_array_equal(out, [9.0, 8.0, 7.0])
+
+
+def test_scalar_div():
+  """Scalar division: x / 2.0."""
+  @mini_pallas.kernel
+  def k(x, o):
+    o[...] = x[...] / 2.0
+
+  x = np.array([2.0, 4.0, 6.0])
+  out = np.zeros(3)
+  k(x, out)
+  np.testing.assert_array_equal(out, [1.0, 2.0, 3.0])
+
+
+def test_numpy_array_const():
+  """NumPy array as constant: x + np.array([1, 2, 3])."""
+  @mini_pallas.kernel
+  def k(x, o):
+    o[...] = x[...] + np.array([10.0, 20.0, 30.0])
+
+  x = np.array([1.0, 2.0, 3.0])
+  out = np.zeros(3)
+  k(x, out)
+  np.testing.assert_array_equal(out, [11.0, 22.0, 33.0])
+
+
+def test_affine_transform():
+  """Affine transform: x * scale + bias with scalars."""
+  @mini_pallas.kernel
+  def k(x, o):
+    o[...] = x[...] * 2.0 + 1.0
+
+  x = np.array([1.0, 2.0, 3.0])
+  out = np.zeros(3)
+  k(x, out)
+  np.testing.assert_array_equal(out, [3.0, 5.0, 7.0])

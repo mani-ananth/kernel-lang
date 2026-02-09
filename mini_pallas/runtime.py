@@ -2,6 +2,8 @@
 
 from typing import Callable
 
+import numpy as np
+
 from .core import KernelIR
 from .lowering import lower_to_numpy
 
@@ -15,7 +17,7 @@ def compile_numpy(ir: KernelIR) -> Callable:
     return _cache[key]
 
   source = lower_to_numpy(ir)
-  namespace: dict = {}
+  namespace: dict = {"np": np}  # make numpy available in generated code
   exec(source, namespace)
   fn = namespace[ir.name]
   _cache[key] = fn

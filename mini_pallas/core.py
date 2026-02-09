@@ -1,12 +1,13 @@
 """IR definitions for mini_pallas: OpType, IRValue, IROp, KernelIR."""
 
 from enum import Enum, auto
-from typing import Optional
+from typing import Any, Optional
 
 
 class OpType(Enum):
   LOAD = auto()
   STORE = auto()
+  CONST = auto()
   ADD = auto()
   SUB = auto()
   MUL = auto()
@@ -35,11 +36,13 @@ class IROp:
     result: Optional[IRValue],
     operands: list[IRValue],
     ref_name: Optional[str] = None,
+    const_value: Any = None,
   ):
     self.op_type = op_type
     self.result = result
     self.operands = operands
     self.ref_name = ref_name  # used by LOAD/STORE to track which ref
+    self.const_value = const_value  # used by CONST to store literal value
 
 
 class KernelIR:
@@ -62,9 +65,10 @@ class KernelIR:
     operands: list[IRValue],
     ref_name: Optional[str] = None,
     has_result: bool = True,
+    const_value: Any = None,
   ) -> Optional[IRValue]:
     result = self.new_value() if has_result else None
-    op = IROp(op_type, result, operands, ref_name)
+    op = IROp(op_type, result, operands, ref_name, const_value)
     self.ops.append(op)
     return result
 
@@ -75,7 +79,9 @@ def pretty_print(ir: KernelIR) -> str:
   for op in ir.ops:
     operand_str = ", ".join(str(o) for o in op.operands)
     ref_part = f" [{op.ref_name}]" if op.ref_name else ""
-    if op.result is not None:
+    if op.op_type == OpType.CONST:
+      lines.append(f"  {op.result} = CONST({op.const_value!r})")
+    elif op.result is not None:
       lines.append(f"  {op.result} = {op.op_type.name}{ref_part}({operand_str})")
     else:
       lines.append(f"  {op.op_type.name}{ref_part}({operand_str})")

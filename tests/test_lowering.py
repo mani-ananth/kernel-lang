@@ -76,3 +76,24 @@ def test_lower_unsupported_op():
 
   with pytest.raises(ValueError, match="Unsupported op"):
     lower_to_numpy(ir)
+
+
+def test_lower_const_scalar():
+  """CONST op lowers to a literal value."""
+  ir = KernelIR("test", ["x", "o"])
+  v0 = ir.add_op(OpType.LOAD, [], ref_name="x")
+  v1 = ir.add_op(OpType.CONST, [], const_value=2.5)
+  v2 = ir.add_op(OpType.MUL, [v0, v1])
+  ir.add_op(OpType.STORE, [v2], ref_name="o", has_result=False)
+  source = lower_to_numpy(ir)
+  assert "v1 = 2.5" in source
+
+
+def test_lower_const_with_scalar_kernel():
+  """Traced kernel with scalar produces CONST in lowered code."""
+  def k(x, o):
+    o[...] = x[...] * 3.0
+  ir = trace_kernel(k)
+  source = lower_to_numpy(ir)
+  assert "3.0" in source
+  compile(source, "<test>", "exec")  # must be valid Python

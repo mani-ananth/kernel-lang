@@ -10,32 +10,6 @@ import pytest
 import mini_pallas
 
 
-@pytest.mark.xfail(strict=True, reason="float has no _ir_value attribute")
-def test_scalar_mul():
-  """o = x * 2.0 — scalar on right side."""
-  @mini_pallas.kernel
-  def k(x, o):
-    o[...] = x[...] * 2.0
-
-  x = np.array([1.0, 2.0, 3.0])
-  out = np.zeros(3)
-  k(x, out)
-  np.testing.assert_array_equal(out, [2.0, 4.0, 6.0])
-
-
-@pytest.mark.xfail(strict=True, reason="float has no _ir_value attribute")
-def test_scalar_add():
-  """o = x + 1.0 — scalar addition."""
-  @mini_pallas.kernel
-  def k(x, o):
-    o[...] = x[...] + 1.0
-
-  x = np.array([1.0, 2.0, 3.0])
-  out = np.zeros(3)
-  k(x, out)
-  np.testing.assert_array_equal(out, [2.0, 3.0, 4.0])
-
-
 @pytest.mark.xfail(strict=True, reason="__pow__ not implemented on TracerValue")
 def test_power():
   """o = x ** 2 — power operator."""

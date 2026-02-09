@@ -1,5 +1,7 @@
 """Lowering: convert KernelIR to executable NumPy Python source."""
 
+import numpy as np
+
 from .core import KernelIR, OpType
 
 _BINOP_SYMBOL = {
@@ -9,6 +11,18 @@ _BINOP_SYMBOL = {
   OpType.TRUEDIV: "/",
   OpType.MATMUL: "@",
 }
+
+
+def _format_const(value) -> str:
+  """Format a constant value for code generation."""
+  if isinstance(value, np.ndarray):
+    # For numpy arrays, generate np.array(...) call
+    return f"np.array({value.tolist()!r}, dtype=np.{value.dtype})"
+  elif isinstance(value, np.generic):
+    # For numpy scalars, convert to Python scalar
+    return repr(value.item())
+  else:
+    return repr(value)
 
 
 def lower_to_numpy(ir: KernelIR) -> str:
@@ -21,6 +35,8 @@ def lower_to_numpy(ir: KernelIR) -> str:
       lines.append(f"  {op.result} = {op.ref_name}.copy()")
     elif op.op_type == OpType.STORE:
       lines.append(f"  {op.ref_name}[...] = {op.operands[0]}")
+    elif op.op_type == OpType.CONST:
+      lines.append(f"  {op.result} = {_format_const(op.const_value)}")
     elif op.op_type in _BINOP_SYMBOL:
       lhs, rhs = op.operands
       sym = _BINOP_SYMBOL[op.op_type]

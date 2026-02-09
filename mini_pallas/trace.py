@@ -1,6 +1,9 @@
 """Tracing system: proxy objects that record operations into a KernelIR."""
 
 import inspect
+import numbers
+
+import numpy as np
 
 from .core import KernelIR, IRValue, OpType
 
@@ -12,45 +15,60 @@ class TracerValue:
     self._ir = ir
     self._ir_value = ir_value
 
-  def _binop(self, other: "TracerValue", op_type: OpType) -> "TracerValue":
+  def _ensure_tracer(self, other) -> "TracerValue":
+    """Wrap a scalar/constant as a TracerValue with a CONST op."""
+    if isinstance(other, TracerValue):
+      return other
+    # Accept Python numbers and numpy arrays/scalars
+    if isinstance(other, (numbers.Number, np.ndarray, np.generic)):
+      result = self._ir.add_op(OpType.CONST, [], const_value=other)
+      return TracerValue(self._ir, result)
+    raise TypeError(f"Cannot convert {type(other).__name__} to TracerValue")
+
+  def _binop(self, other, op_type: OpType) -> "TracerValue":
+    other = self._ensure_tracer(other)
     result = self._ir.add_op(op_type, [self._ir_value, other._ir_value])
+    return TracerValue(self._ir, result)
+
+  def _rbinop(self, other, op_type: OpType) -> "TracerValue":
+    """Reverse binop: other <op> self, where other is not a TracerValue."""
+    other = self._ensure_tracer(other)
+    result = self._ir.add_op(op_type, [other._ir_value, self._ir_value])
     return TracerValue(self._ir, result)
 
   def __add__(self, other):
     return self._binop(other, OpType.ADD)
 
   def __radd__(self, other):
-    return self._binop(other, OpType.ADD)
+    return self._binop(other, OpType.ADD)  # addition is commutative
 
   def __sub__(self, other):
     return self._binop(other, OpType.SUB)
 
   def __rsub__(self, other):
-    # other - self
-    return other._binop(self, OpType.SUB)
+    return self._rbinop(other, OpType.SUB)  # other - self
 
   def __mul__(self, other):
     return self._binop(other, OpType.MUL)
 
   def __rmul__(self, other):
-    return self._binop(other, OpType.MUL)
+    return self._binop(other, OpType.MUL)  # multiplication is commutative
 
   def __truediv__(self, other):
     return self._binop(other, OpType.TRUEDIV)
 
   def __rtruediv__(self, other):
-    # other / self
-    return other._binop(self, OpType.TRUEDIV)
+    return self._rbinop(other, OpType.TRUEDIV)  # other / self
 
   def __neg__(self):
     result = self._ir.add_op(OpType.NEG, [self._ir_value])
     return TracerValue(self._ir, result)
-  
+
   def __matmul__(self, other):
     return self._binop(other, OpType.MATMUL)
-  
+
   def __rmatmul__(self, other):
-    return other._binop(self, OpType.MATMUL)
+    return self._rbinop(other, OpType.MATMUL)  # other @ self
 
 
 class TracerRef:

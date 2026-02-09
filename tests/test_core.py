@@ -5,9 +5,9 @@ from mini_pallas.core import OpType, IRValue, IROp, KernelIR, pretty_print
 
 def test_optype_members():
   """All expected ops exist in the enum."""
-  ops = {OpType.LOAD, OpType.STORE, OpType.ADD, OpType.SUB,
+  ops = {OpType.LOAD, OpType.STORE, OpType.CONST, OpType.ADD, OpType.SUB,
          OpType.MUL, OpType.TRUEDIV, OpType.NEG, OpType.MATMUL}
-  assert len(ops) == 8
+  assert len(ops) == 9
 
 
 def test_irvalue_repr():
@@ -67,3 +67,25 @@ def test_pretty_print():
   assert "LOAD [y_ref]" in lines[2]
   assert "ADD" in lines[3]
   assert "STORE [o_ref]" in lines[4]
+
+
+def test_const_op():
+  """CONST op stores a constant value."""
+  ir = KernelIR("test", ["x", "o"])
+  v0 = ir.add_op(OpType.CONST, [], const_value=2.5)
+  assert len(ir.ops) == 1
+  assert ir.ops[0].op_type == OpType.CONST
+  assert ir.ops[0].const_value == 2.5
+  assert ir.ops[0].result == v0
+
+
+def test_pretty_print_const():
+  """pretty_print shows CONST values."""
+  ir = KernelIR("scale", ["x", "o"])
+  v0 = ir.add_op(OpType.LOAD, [], ref_name="x")
+  v1 = ir.add_op(OpType.CONST, [], const_value=2.0)
+  v2 = ir.add_op(OpType.MUL, [v0, v1])
+  ir.add_op(OpType.STORE, [v2], ref_name="o", has_result=False)
+
+  output = pretty_print(ir)
+  assert "CONST(2.0)" in output
