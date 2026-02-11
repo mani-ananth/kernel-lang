@@ -3,6 +3,8 @@
 from enum import Enum, auto
 from typing import Any, Optional
 
+import numpy as np
+
 
 class OpType(Enum):
   LOAD = auto()
@@ -17,14 +19,30 @@ class OpType(Enum):
 
 
 class IRValue:
-  """SSA value with a unique ID."""
+  """SSA value with a unique ID, shape, and dtype."""
 
-  def __init__(self, id: int, name: str):
+  def __init__(
+    self,
+    id: int,
+    name: str,
+    shape: Optional[tuple[int, ...]] = None,
+    dtype: Optional[np.dtype] = None,
+  ):
     self.id = id
     self.name = name
+    self.shape = shape
+    self.dtype = dtype
 
   def __repr__(self):
     return self.name
+
+  def shape_str(self) -> str:
+    """Format shape and dtype for display."""
+    if self.shape is None:
+      return ""
+    dtype_str = self.dtype.name if self.dtype else "?"
+    shape_str = ",".join(str(d) for d in self.shape)
+    return f"<{shape_str}:{dtype_str}>"
 
 
 class IROp:
@@ -54,8 +72,13 @@ class KernelIR:
     self.ops: list[IROp] = []
     self._next_id = 0
 
-  def new_value(self, prefix: str = "v") -> IRValue:
-    val = IRValue(self._next_id, f"{prefix}{self._next_id}")
+  def new_value(
+    self,
+    prefix: str = "v",
+    shape: Optional[tuple[int, ...]] = None,
+    dtype: Optional[np.dtype] = None,
+  ) -> IRValue:
+    val = IRValue(self._next_id, f"{prefix}{self._next_id}", shape, dtype)
     self._next_id += 1
     return val
 
@@ -66,8 +89,10 @@ class KernelIR:
     ref_name: Optional[str] = None,
     has_result: bool = True,
     const_value: Any = None,
+    shape: Optional[tuple[int, ...]] = None,
+    dtype: Optional[np.dtype] = None,
   ) -> Optional[IRValue]:
-    result = self.new_value() if has_result else None
+    result = self.new_value(shape=shape, dtype=dtype) if has_result else None
     op = IROp(op_type, result, operands, ref_name, const_value)
     self.ops.append(op)
     return result
@@ -79,10 +104,11 @@ def pretty_print(ir: KernelIR) -> str:
   for op in ir.ops:
     operand_str = ", ".join(str(o) for o in op.operands)
     ref_part = f" [{op.ref_name}]" if op.ref_name else ""
+    shape_part = op.result.shape_str() if op.result else ""
     if op.op_type == OpType.CONST:
-      lines.append(f"  {op.result} = CONST({op.const_value!r})")
+      lines.append(f"  {op.result}{shape_part} = CONST({op.const_value!r})")
     elif op.result is not None:
-      lines.append(f"  {op.result} = {op.op_type.name}{ref_part}({operand_str})")
+      lines.append(f"  {op.result}{shape_part} = {op.op_type.name}{ref_part}({operand_str})")
     else:
       lines.append(f"  {op.op_type.name}{ref_part}({operand_str})")
   return "\n".join(lines)

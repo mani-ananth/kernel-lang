@@ -221,3 +221,54 @@ def test_affine_transform():
   out = np.zeros(3)
   k(x, out)
   np.testing.assert_array_equal(out, [3.0, 5.0, 7.0])
+
+
+def test_show_ir_with_shapes():
+  """show_ir with arrays shows shape information."""
+  @mini_pallas.kernel
+  def k(x, y, o):
+    o[...] = x[...] + y[...]
+
+  x = np.array([1.0, 2.0, 3.0])
+  y = np.array([4.0, 5.0, 6.0])
+  out = np.zeros(3)
+  ir_str = k.show_ir(x, y, out)
+  # Should contain shape annotations
+  assert "<3:float64>" in ir_str
+
+
+def test_show_ir_matmul_shapes():
+  """show_ir shows correct matmul result shape."""
+  @mini_pallas.kernel
+  def k(a, b, o):
+    o[...] = a[...] @ b[...]
+
+  a = np.zeros((3, 4))
+  b = np.zeros((4, 5))
+  out = np.zeros((3, 5))
+  ir_str = k.show_ir(a, b, out)
+  # Should show 3,5 shape for matmul result
+  assert "<3,5:" in ir_str
+
+
+def test_kernel_retraces_on_shape_change():
+  """Kernel retraces when input shapes change."""
+  @mini_pallas.kernel
+  def k(x, o):
+    o[...] = x[...] * 2.0
+
+  # First call with shape (3,)
+  x1 = np.array([1.0, 2.0, 3.0])
+  out1 = np.zeros(3)
+  k(x1, out1)
+  ir1 = k.show_ir(x1, out1)
+
+  # Second call with shape (5,)
+  x2 = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+  out2 = np.zeros(5)
+  k(x2, out2)
+  ir2 = k.show_ir(x2, out2)
+
+  # Should have different shapes in IR
+  assert "<3:" in ir1
+  assert "<5:" in ir2
