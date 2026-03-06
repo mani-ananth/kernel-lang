@@ -1,9 +1,10 @@
 """Tests for mini_pallas.lowering — code generation."""
 
+import numpy as np
 import pytest
 
 from mini_pallas.core import OpType, KernelIR, IROp, IRValue
-from mini_pallas.lowering import lower_to_numpy
+from mini_pallas.lowering import lower_fused_numpy, lower_to_numpy
 from mini_pallas.trace import trace_kernel
 
 
@@ -97,3 +98,125 @@ def test_lower_const_with_scalar_kernel():
   source = lower_to_numpy(ir)
   assert "3.0" in source
   compile(source, "<test>", "exec")  # must be valid Python
+
+
+# --- Fused lowering tests ---
+
+def test_fused_lower_simple_add():
+  """Fused lowering of simple add produces for loop."""
+  def k(x, y, o):
+    o[...] = x[...] + y[...]
+
+  shapes = [(4,), (4,), (4,)]
+  dtypes = [np.float64] * 3
+  ir = trace_kernel(k, shapes, dtypes)
+  source = lower_fused_numpy(ir)
+
+  assert "for _i0 in range(4):" in source
+  assert ".copy()" not in source
+  assert "x[_i0]" in source or "x_ref[_i0]" in source  # direct ref read
+  compile(source, "<test>", "exec")
+
+
+def test_fused_lower_chained_ops():
+  """Fused (a + b) * c produces a single for loop with scalar arithmetic."""
+  def k(a, b, c, o):
+    o[...] = (a[...] + b[...]) * c[...]
+
+  shapes = [(4,), (4,), (4,), (4,)]
+  dtypes = [np.float64] * 4
+  ir = trace_kernel(k, shapes, dtypes)
+  source = lower_fused_numpy(ir)
+
+  assert "for _i0 in range(4):" in source
+  assert "+" in source
+  assert "*" in source
+  assert ".copy()" not in source
+  compile(source, "<test>", "exec")
+
+
+def test_fused_lower_with_scalar_const():
+  """Fused lowering with scalar constants emits constants before the loop."""
+  def k(x, o):
+    o[...] = x[...] * 2.0 + 1.0
+
+  shapes = [(4,), (4,)]
+  dtypes = [np.float64] * 2
+  ir = trace_kernel(k, shapes, dtypes)
+  source = lower_fused_numpy(ir)
+
+  assert "for _i0 in range(4):" in source
+  assert "2.0" in source
+  assert "1.0" in source
+  compile(source, "<test>", "exec")
+
+
+def test_fused_lower_2d():
+  """Fused lowering of 2D arrays produces nested for loops."""
+  def k(x, y, o):
+    o[...] = x[...] + y[...]
+
+  shapes = [(3, 4), (3, 4), (3, 4)]
+  dtypes = [np.float64] * 3
+  ir = trace_kernel(k, shapes, dtypes)
+  source = lower_fused_numpy(ir)
+
+  assert "for _i0 in range(3):" in source
+  assert "for _i1 in range(4):" in source
+  compile(source, "<test>", "exec")
+
+
+def test_fused_lower_falls_back_without_shapes():
+  """Fused lowering falls back to unfused when no shape info."""
+  def k(x, y, o):
+    o[...] = x[...] + y[...]
+
+  ir = trace_kernel(k)  # no shapes
+  fused_source = lower_fused_numpy(ir)
+  unfused_source = lower_to_numpy(ir)
+
+  assert fused_source == unfused_source
+
+
+def test_fused_lower_matmul_plus_bias():
+  """Matmul is NOT fused; only the ADD with bias gets a fused loop."""
+  def k(a, b, bias, o):
+    o[...] = (a[...] @ b[...]) + bias[...]
+
+  shapes = [(2, 3), (3, 4), (2, 4), (2, 4)]
+  dtypes = [np.float64] * 4
+  ir = trace_kernel(k, shapes, dtypes)
+  source = lower_fused_numpy(ir)
+
+  # MATMUL should still be present as unfused
+  assert "@" in source
+  # The ADD+bias part should be in a fused loop
+  assert "for _i0" in source
+  compile(source, "<test>", "exec")
+
+
+def test_fused_lower_neg_chain():
+  """Fused -(x + y) produces a loop with negation."""
+  def k(x, y, o):
+    o[...] = -(x[...] + y[...])
+
+  shapes = [(4,), (4,), (4,)]
+  dtypes = [np.float64] * 3
+  ir = trace_kernel(k, shapes, dtypes)
+  source = lower_fused_numpy(ir)
+
+  assert "for _i0 in range(4):" in source
+  assert "-" in source
+  compile(source, "<test>", "exec")
+
+
+def test_fused_lower_is_valid_python():
+  """Fused lowered source compiles as valid Python."""
+  def k(a, b, o):
+    o[...] = (a[...] + b[...]) * a[...]
+
+  shapes = [(8,), (8,), (8,)]
+  dtypes = [np.float64] * 3
+  ir = trace_kernel(k, shapes, dtypes)
+  source = lower_fused_numpy(ir)
+  compile(source, "<test>", "exec")
