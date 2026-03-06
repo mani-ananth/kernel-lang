@@ -3,6 +3,7 @@
 import numpy as np
 
 import mini_pallas
+from mini_pallas.lowering import lower_to_numpy
 
 
 def test_vector_add():
@@ -272,3 +273,113 @@ def test_kernel_retraces_on_shape_change():
   # Should have different shapes in IR
   assert "<3:" in ir1
   assert "<5:" in ir2
+
+
+# --- Fusion integration tests ---
+
+def test_fused_chained_ops():
+  """Fused (a + b) * c produces correct result."""
+  @mini_pallas.kernel
+  def k(a, b, c, o):
+    o[...] = (a[...] + b[...]) * c[...]
+
+  a = np.array([1.0, 2.0, 3.0, 4.0])
+  b = np.array([5.0, 6.0, 7.0, 8.0])
+  c = np.array([2.0, 2.0, 2.0, 2.0])
+  out = np.zeros(4)
+  k(a, b, c, out)
+  expected = (a + b) * c
+  np.testing.assert_array_equal(out, expected)
+
+
+def test_fused_scalar_constants():
+  """Fused x * 2.0 + 1.0 produces correct result."""
+  @mini_pallas.kernel
+  def k(x, o):
+    o[...] = x[...] * 2.0 + 1.0
+
+  x = np.array([1.0, 2.0, 3.0])
+  out = np.zeros(3)
+  k(x, out)
+  np.testing.assert_array_equal(out, [3.0, 5.0, 7.0])
+
+
+def test_fused_broadcasting_2d_1d():
+  """Fused 2D + 1D with broadcasting produces correct result."""
+  @mini_pallas.kernel
+  def k(x, y, o):
+    o[...] = x[...] + y[...]
+
+  x = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+  y = np.array([10.0, 20.0, 30.0])
+  out = np.zeros((2, 3))
+  k(x, y, out)
+  expected = x + y
+  np.testing.assert_array_equal(out, expected)
+
+
+def test_fused_matmul_plus_bias():
+  """Matmul + bias: MATMUL unfused, ADD fused, correct result."""
+  @mini_pallas.kernel
+  def k(a, b, bias, o):
+    o[...] = (a[...] @ b[...]) + bias[...]
+
+  a = np.array([[1.0, 2.0], [3.0, 4.0]])
+  b = np.array([[1.0, 0.0], [0.0, 1.0]])
+  bias = np.array([[10.0, 20.0], [30.0, 40.0]])
+  out = np.zeros((2, 2))
+  k(a, b, bias, out)
+  expected = (a @ b) + bias
+  np.testing.assert_array_equal(out, expected)
+
+
+def test_fused_negation_chain():
+  """Fused -(x + y) produces correct result."""
+  @mini_pallas.kernel
+  def k(x, y, o):
+    o[...] = -(x[...] + y[...])
+
+  x = np.array([1.0, 2.0, 3.0])
+  y = np.array([4.0, 5.0, 6.0])
+  out = np.zeros(3)
+  k(x, y, out)
+  expected = -(x + y)
+  np.testing.assert_array_equal(out, expected)
+
+
+def test_fused_lower_shows_for_loops():
+  """k.lower(arrays) with shape info shows for-loop code."""
+  @mini_pallas.kernel
+  def k(x, y, o):
+    o[...] = x[...] + y[...]
+
+  x = np.array([1.0, 2.0, 3.0])
+  y = np.array([4.0, 5.0, 6.0])
+  out = np.zeros(3)
+  source = k.lower(x, y, out)
+  assert "for _i0" in source
+
+
+def test_unfused_lower_shows_copy():
+  """lower_to_numpy(ir) still shows old-style .copy() code."""
+  @mini_pallas.kernel
+  def k(x, y, o):
+    o[...] = x[...] + y[...]
+
+  source = k.lower()  # no arrays -> unfused
+  assert ".copy()" in source
+  assert "for _i0" not in source
+
+
+def test_fused_2d_correctness():
+  """Fused 2D element-wise operations produce correct results."""
+  @mini_pallas.kernel
+  def k(x, y, o):
+    o[...] = (x[...] + y[...]) * x[...]
+
+  x = np.array([[1.0, 2.0], [3.0, 4.0]])
+  y = np.array([[5.0, 6.0], [7.0, 8.0]])
+  out = np.zeros((2, 2))
+  k(x, y, out)
+  expected = (x + y) * x
+  np.testing.assert_array_equal(out, expected)

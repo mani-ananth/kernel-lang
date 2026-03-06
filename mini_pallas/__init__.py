@@ -1,8 +1,8 @@
 """mini_pallas — a minimal Pallas-like kernel language."""
 
 from .core import pretty_print
-from .lowering import lower_to_numpy
-from .runtime import compile_numpy
+from .lowering import lower_fused_numpy, lower_to_numpy
+from .runtime import compile_fused_numpy, compile_numpy
 from .trace import trace_kernel
 
 
@@ -34,12 +34,14 @@ class KernelFunction:
 
   def __call__(self, *arrays):
     ir = self._get_ir(arrays)
-    compiled = compile_numpy(ir)
+    compiled = compile_fused_numpy(ir)
     compiled(*arrays)
 
   def lower(self, *arrays) -> str:
-    """Return lowered NumPy source. Pass arrays for shape-aware lowering."""
+    """Return lowered NumPy source. Pass arrays for shape-aware (fused) lowering."""
     ir = self._get_ir(arrays if arrays else None)
+    if arrays:
+      return lower_fused_numpy(ir)
     return lower_to_numpy(ir)
 
   def show_ir(self, *arrays) -> str:
