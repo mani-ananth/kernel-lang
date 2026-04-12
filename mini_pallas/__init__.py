@@ -7,46 +7,58 @@ from .trace import trace_kernel
 
 
 class KernelFunction:
-  """Wraps a user-defined kernel function with trace/lower/compile/run."""
+  """Wraps a user-defined kernel function with trace/lower/compile/run.
+
+  Guard-based retracing: each unique (shapes, dtypes) signature gets its own
+  cached (KernelIR, compiled_fn) entry, mirroring JAX/Dynamo's approach.
+  """
 
   def __init__(self, fn):
     self._fn = fn
-    self._ir = None
-    self._cached_shapes = None
+    # Guard cache: (shapes_tuple, dtypes_tuple) -> (KernelIR, compiled_fn)
+    self._guard_cache: dict[tuple, tuple] = {}
 
-  def _get_ir(self, arrays=None):
-    """Get or create IR, optionally with shape info from arrays."""
-    if arrays is not None:
-      shapes = tuple(arr.shape for arr in arrays)
-      dtypes = tuple(arr.dtype for arr in arrays)
-      # Check if we need to retrace due to shape change
-      if self._ir is None or self._cached_shapes != shapes:
-        self._ir = trace_kernel(self._fn, list(shapes), list(dtypes))
-        self._cached_shapes = shapes
-    elif self._ir is None:
-      # Trace without shape info
-      self._ir = trace_kernel(self._fn)
-    return self._ir
+  def _guard_key(self, arrays) -> tuple:
+    """Build a hashable guard key from array shapes and dtypes."""
+    shapes = tuple(arr.shape for arr in arrays)
+    dtypes = tuple(arr.dtype for arr in arrays)
+    return (shapes, dtypes)
+
+  def _get_or_trace(self, arrays) -> tuple:
+    """Return (ir, compiled_fn), tracing + compiling only on guard miss."""
+    key = self._guard_key(arrays)
+    if key not in self._guard_cache:
+      shapes = [arr.shape for arr in arrays]
+      dtypes = [arr.dtype for arr in arrays]
+      ir = trace_kernel(self._fn, shapes, dtypes)
+      fn = compile_fused_numpy(ir)
+      self._guard_cache[key] = (ir, fn)
+    return self._guard_cache[key]
 
   @property
   def ir(self):
-    return self._get_ir()
+    """Return the most recently cached IR, or trace without shape info."""
+    if self._guard_cache:
+      return next(iter(self._guard_cache.values()))[0]
+    return trace_kernel(self._fn)
 
   def __call__(self, *arrays):
-    ir = self._get_ir(arrays)
-    compiled = compile_fused_numpy(ir)
+    _, compiled = self._get_or_trace(arrays)
     compiled(*arrays)
 
   def lower(self, *arrays) -> str:
     """Return lowered NumPy source. Pass arrays for shape-aware (fused) lowering."""
-    ir = self._get_ir(arrays if arrays else None)
     if arrays:
+      ir, _ = self._get_or_trace(arrays)
       return lower_fused_numpy(ir)
-    return lower_to_numpy(ir)
+    return lower_to_numpy(trace_kernel(self._fn))
 
   def show_ir(self, *arrays) -> str:
     """Return pretty-printed IR. Pass arrays for shape-aware IR."""
-    ir = self._get_ir(arrays if arrays else None)
+    if arrays:
+      ir, _ = self._get_or_trace(arrays)
+    else:
+      ir = trace_kernel(self._fn)
     return pretty_print(ir)
 
 
