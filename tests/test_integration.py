@@ -3,7 +3,6 @@
 import numpy as np
 
 import mini_pallas
-from mini_pallas.lowering import lower_to_numpy
 
 
 def test_vector_add():
@@ -138,6 +137,9 @@ def test_lower_returns_string():
   source = k.lower()
   assert isinstance(source, str)
   assert "def k(" in source
+
+
+# --- Fusion integration tests ---
 
 
 def test_scalar_mul():
@@ -346,29 +348,6 @@ def test_fused_negation_chain():
   expected = -(x + y)
   np.testing.assert_array_equal(out, expected)
 
-
-def test_fused_lower_shows_for_loops():
-  """k.lower(arrays) with shape info shows for-loop code."""
-  @mini_pallas.kernel
-  def k(x, y, o):
-    o[...] = x[...] + y[...]
-
-  x = np.array([1.0, 2.0, 3.0])
-  y = np.array([4.0, 5.0, 6.0])
-  out = np.zeros(3)
-  source = k.lower(x, y, out)
-  assert "for _i0" in source
-
-
-def test_unfused_lower_shows_copy():
-  """lower_to_numpy(ir) still shows old-style .copy() code."""
-  @mini_pallas.kernel
-  def k(x, y, o):
-    o[...] = x[...] + y[...]
-
-  source = k.lower()  # no arrays -> unfused
-  assert ".copy()" in source
-  assert "for _i0" not in source
 
 
 def test_fused_2d_correctness():

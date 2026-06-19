@@ -18,7 +18,7 @@ import numpy as np
 
 import mini_pallas
 from mini_pallas.trace import trace_kernel
-from mini_pallas.runtime import compile_numpy, _cache
+from mini_pallas.runtime import compile_numpy, _numpy_cache as _cache
 
 
 def load_kernel(spec):
