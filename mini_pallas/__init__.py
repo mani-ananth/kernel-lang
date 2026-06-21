@@ -62,6 +62,53 @@ class KernelFunction:
       return lower_to_mlx(ir)
     return lower_to_numpy(ir)
 
+  def run_profiled(self, *arrays, profiler=None, n_repeats: int = 1):
+    """Run with per-op timing instrumentation. Returns a Profiler with trace events.
+
+    Each repeat emits its own kernel_call span so Perfetto shows all runs and
+    compare_traces.py can compute mean/stdev across them.
+
+    Args:
+      n_repeats: number of timed calls (default 1). Use >=5 for stable timings.
+
+    Example:
+      p = kernel.run_profiled(a, b, out, n_repeats=10)
+      p.save("trace.json")  # open in ui.perfetto.dev
+    """
+    from .profiler import Profiler
+    from .profiled_lowering import compile_mlx_profiled, compile_numpy_profiled
+
+    pid = 2 if self._backend == "mlx" else 1
+    if profiler is None:
+      profiler = Profiler(name=f"{self._fn.__name__} ({self._backend})", pid=pid)
+
+    key = self._guard_key(arrays)
+    if key in self._guard_cache:
+      ir = self._guard_cache[key][0]
+    else:
+      shapes = [arr.shape for arr in arrays]
+      dtypes = [arr.dtype for arr in arrays]
+      ir = trace_kernel(self._fn, shapes, dtypes)
+
+    if self._backend == "mlx":
+      fn = compile_mlx_profiled(ir, profiler)
+    else:
+      fn = compile_numpy_profiled(ir, profiler)
+
+    profiler.record_counters()
+    if self._backend == "mlx":
+      profiler.record_mlx_memory()
+
+    for _ in range(n_repeats):
+      with profiler.span("kernel_call", cat="runtime", size=arrays[0].size):
+        fn(*arrays)
+
+    profiler.record_counters()
+    if self._backend == "mlx":
+      profiler.record_mlx_memory()
+
+    return profiler
+
   def show_ir(self, *arrays) -> str:
     if arrays:
       ir, _ = self._get_or_trace(arrays)
