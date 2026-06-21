@@ -11,16 +11,16 @@ pip install -e .
 # Run all tests
 pytest
 
-# Run a single test file
-pytest tests/test_integration.py
+# Run a single test
+pytest tests/test_integration.py::test_vector_add
 
-# Run an example
+# Examples
 python examples/01_vector_add.py
 python examples/03_numpy_vs_mlx.py
 python examples/04_perf_breakdown.py        # step-by-step timing breakdown
-python examples/05_perfetto_profile.py      # generates Perfetto trace JSON files
+python examples/05_perfetto_profile.py --size 10000 --repeats 5
 
-# Compare two Perfetto traces
+# Profiling / trace comparison
 python tools/compare_traces.py numpy_trace.json mlx_trace.json
 python tools/compare_traces.py numpy_trace.json mlx_trace.json --merge comparison.json
 ```
