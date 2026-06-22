@@ -39,8 +39,8 @@ def add_gpu(x_ref, y_ref, o_ref):
 ## Installation
 
 ```bash
-git clone https://github.com/mani-ananth/kernel-lang
-cd kernel-lang
+git clone https://github.com/mani-ananth/picokernel
+cd picokernel
 pip install -e .
 
 # Optional: MLX backend (Apple Silicon only)
