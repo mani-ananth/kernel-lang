@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""Benchmark: matrix multiplication via mini_pallas vs raw NumPy."""
+"""Benchmark: matrix multiplication via picokernel vs raw NumPy."""
 
 import statistics
 import time
 
 import numpy as np
 
-import mini_pallas
-from mini_pallas.trace import trace_kernel
-from mini_pallas.runtime import compile_numpy, _cache
+import picokernel
+from picokernel.trace import trace_kernel
+from picokernel.runtime import compile_numpy, _cache
 
 
-@mini_pallas.kernel
+@picokernel.kernel
 def matmul_kernel(a_ref, b_ref, o_ref):
   a, b = a_ref[...], b_ref[...]
   o_ref[...] = a @ b
@@ -73,7 +73,7 @@ def main():
     # raw numpy
     np_times = bench(lambda: np.matmul(a, b, out=out_np), rounds=ROUNDS)
 
-    # mini_pallas kernel (warm — already traced+compiled)
+    # picokernel kernel (warm — already traced+compiled)
     matmul_kernel(a, b, out_kn)  # ensure warm
     kn_times = bench(lambda: matmul_kernel(a, b, out_kn), rounds=ROUNDS)
 
@@ -96,7 +96,7 @@ def main():
   out = np.empty((n, n))
 
   def cold_call():
-    kf = mini_pallas.KernelFunction(matmul_kernel._fn)
+    kf = picokernel.KernelFunction(matmul_kernel._fn)
     _cache.clear()
     kf(a, b, out)
 

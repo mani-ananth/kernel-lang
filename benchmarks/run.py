@@ -16,9 +16,9 @@ import time
 
 import numpy as np
 
-import mini_pallas
-from mini_pallas.trace import trace_kernel
-from mini_pallas.runtime import compile_numpy, _numpy_cache as _cache
+import picokernel
+from picokernel.trace import trace_kernel
+from picokernel.runtime import compile_numpy, _numpy_cache as _cache
 
 
 def load_kernel(spec):
@@ -34,8 +34,8 @@ def load_kernel(spec):
   if obj is None:
     print(f"Error: '{name}' not found in {path}", file=sys.stderr)
     sys.exit(1)
-  if not isinstance(obj, mini_pallas.KernelFunction):
-    print(f"Error: '{name}' is not a mini_pallas.kernel", file=sys.stderr)
+  if not isinstance(obj, picokernel.KernelFunction):
+    print(f"Error: '{name}' is not a picokernel.kernel", file=sys.stderr)
     sys.exit(1)
   return obj
 
@@ -73,7 +73,7 @@ def fmt(times):
 
 
 def main():
-  parser = argparse.ArgumentParser(description="Benchmark a mini_pallas kernel")
+  parser = argparse.ArgumentParser(description="Benchmark a picokernel kernel")
   parser.add_argument("--kernel", required=True,
     help="file.py::function_name")
   parser.add_argument("--size", type=int, default=1024,
@@ -127,7 +127,7 @@ def main():
 
   #  cold (trace + compile + execute) 
   def cold_call():
-    kf = mini_pallas.KernelFunction(kernel._fn)
+    kf = picokernel.KernelFunction(kernel._fn)
     _cache.clear()
     kf(*inputs, output)
   cold_times = bench(cold_call, rounds=args.rounds, warmup=args.warmup)

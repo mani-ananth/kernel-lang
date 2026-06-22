@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 import numpy as np
-import mini_pallas
+import picokernel
 
-@mini_pallas.kernel
+@picokernel.kernel
 def matmul_kernel(x_ref, y_ref, o_ref):
   a, b = x_ref[...], y_ref[...]
   o_ref[...] = a @ b

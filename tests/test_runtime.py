@@ -1,7 +1,7 @@
-"""Tests for mini_pallas.runtime — compilation and caching."""
+"""Tests for picokernel.runtime — compilation and caching."""
 
-from mini_pallas.runtime import compile_numpy, _numpy_cache
-from mini_pallas.trace import trace_kernel
+from picokernel.runtime import compile_numpy, _numpy_cache
+from picokernel.trace import trace_kernel
 
 
 def test_compile_returns_callable():

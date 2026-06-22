@@ -1,4 +1,4 @@
-"""mini_pallas — a minimal Pallas-like kernel language."""
+"""picokernel — a minimal Pallas-like kernel language."""
 
 from .core import pretty_print
 from .lowering import lower_to_numpy
@@ -118,7 +118,7 @@ class KernelFunction:
 
 
 def kernel(fn=None, *, backend: str = "numpy"):
-  """Decorator: marks a function as a mini_pallas kernel.
+  """Decorator: marks a function as a picokernel kernel.
 
   Usage:
     @kernel

@@ -7,12 +7,12 @@ Guards are checked on every call; a miss triggers retrace + recompile.
 import numpy as np
 import pytest
 
-import mini_pallas
+import picokernel
 
 
 def test_different_shapes_cached_separately():
   """Calling with two different shapes creates two independent cache entries."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, o):
     o[...] = x[...] * 2.0
 
@@ -26,7 +26,7 @@ def test_different_shapes_cached_separately():
 
 def test_same_shape_uses_cache():
   """Repeated calls with the same shape use the cached entry (one entry)."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, o):
     o[...] = x[...] * 2.0
 
@@ -39,7 +39,7 @@ def test_same_shape_uses_cache():
 
 def test_different_dtypes_cached_separately():
   """Same shape but different dtypes produces two independent cache entries."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, o):
     o[...] = x[...]
 
@@ -56,7 +56,7 @@ def test_different_dtypes_cached_separately():
 
 def test_alternating_shapes_no_retrace():
   """Alternating between two shapes reuses existing entries; cache stays at 2."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, o):
     o[...] = x[...] * 2.0
 
@@ -73,7 +73,7 @@ def test_alternating_shapes_no_retrace():
 
 def test_guard_hit_correctness():
   """Guard hits produce the same correct results as the initial trace."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, o):
     o[...] = x[...] * 3.0
 
@@ -94,11 +94,11 @@ def test_guard_hit_correctness():
 
 def test_cache_isolated_per_kernel_instance():
   """Two separate @kernel instances have independent guard caches."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k1(x, o):
     o[...] = x[...]
 
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k2(x, o):
     o[...] = x[...]
 
@@ -111,7 +111,7 @@ def test_cache_isolated_per_kernel_instance():
 
 def test_guard_key_covers_all_params():
   """Guard key distinguishes different shapes across multiple parameters."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, y, o):
     o[...] = x[...] + y[...]
 
@@ -127,7 +127,7 @@ def test_guard_key_covers_all_params():
 
 def test_many_shapes_all_cached():
   """N different shapes result in N cache entries."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, o):
     o[...] = x[...]
 
@@ -142,7 +142,7 @@ def test_many_shapes_all_cached():
 
 def test_guard_ir_matches_shape():
   """The IR stored per guard entry reflects that entry's shapes."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, o):
     o[...] = x[...]
 

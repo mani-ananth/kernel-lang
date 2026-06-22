@@ -27,7 +27,7 @@ python tools/compare_traces.py numpy_trace.json mlx_trace.json --merge compariso
 
 ## Architecture
 
-`mini_pallas` is a minimal Pallas-like kernel language that compiles Python functions into executable NumPy or MLX code. The pipeline is:
+`picokernel` is a minimal Pallas-like kernel language that compiles Python functions into executable NumPy or MLX code. The pipeline is:
 
 ```
 @kernel fn  →  trace_kernel  →  KernelIR  →  lower_to_numpy / lower_to_mlx  →  exec()  →  callable

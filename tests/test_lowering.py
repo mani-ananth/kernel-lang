@@ -1,11 +1,11 @@
-"""Tests for mini_pallas.lowering — code generation."""
+"""Tests for picokernel.lowering — code generation."""
 
 import numpy as np
 import pytest
 
-from mini_pallas.core import IROp, IRValue, KernelIR, OpType
-from mini_pallas.lowering import lower_to_numpy
-from mini_pallas.trace import trace_kernel
+from picokernel.core import IROp, IRValue, KernelIR, OpType
+from picokernel.lowering import lower_to_numpy
+from picokernel.trace import trace_kernel
 
 
 def test_lower_add_kernel():

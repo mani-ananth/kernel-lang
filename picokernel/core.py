@@ -1,4 +1,4 @@
-"""IR definitions for mini_pallas: OpType, IRValue, IROp, KernelIR."""
+"""IR definitions for picokernel: OpType, IRValue, IROp, KernelIR."""
 
 from enum import Enum, auto
 from typing import Any, Optional

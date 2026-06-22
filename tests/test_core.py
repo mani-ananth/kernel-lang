@@ -1,6 +1,6 @@
-"""Tests for mini_pallas.core — IR data structures."""
+"""Tests for picokernel.core — IR data structures."""
 
-from mini_pallas.core import OpType, IRValue, IROp, KernelIR, pretty_print
+from picokernel.core import OpType, IRValue, IROp, KernelIR, pretty_print
 
 
 def test_optype_members():
