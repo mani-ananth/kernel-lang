@@ -1,10 +1,10 @@
-"""Tests for mini_pallas.trace — tracing and proxy objects."""
+"""Tests for picokernel.trace — tracing and proxy objects."""
 
 import numpy as np
 import pytest
 
-from mini_pallas.core import OpType
-from mini_pallas.trace import trace_kernel, TracerRef, TracerValue, _broadcast_shapes, _matmul_shape
+from picokernel.core import OpType
+from picokernel.trace import trace_kernel, TracerRef, TracerValue, _broadcast_shapes, _matmul_shape
 
 
 def test_trace_simple_add():
@@ -90,7 +90,7 @@ def test_trace_chained_ops():
 
 def test_tracer_ref_non_ellipsis():
   """Non-ellipsis indexing raises NotImplementedError."""
-  from mini_pallas.core import KernelIR
+  from picokernel.core import KernelIR
   ir = KernelIR("test", ["x"])
   ref = TracerRef(ir, "x")
   with pytest.raises(NotImplementedError):

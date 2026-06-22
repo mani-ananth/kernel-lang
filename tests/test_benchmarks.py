@@ -16,9 +16,9 @@ class TestLoadKernel:
     # Create a temporary kernel file
     kernel_file = tmp_path / "test_kernel.py"
     kernel_file.write_text("""
-import mini_pallas
+import picokernel
 
-@mini_pallas.kernel
+@picokernel.kernel
 def my_kernel(x, o):
   o[...] = x[...]
 """)
@@ -34,9 +34,9 @@ def my_kernel(x, o):
     """Non-existent function causes SystemExit."""
     kernel_file = tmp_path / "test_kernel.py"
     kernel_file.write_text("""
-import mini_pallas
+import picokernel
 
-@mini_pallas.kernel
+@picokernel.kernel
 def existing_kernel(x, o):
   o[...] = x[...]
 """)
@@ -47,9 +47,9 @@ def existing_kernel(x, o):
 class TestMakeArrays:
   def test_make_arrays_count(self):
     """make_arrays generates correct number of inputs."""
-    import mini_pallas
+    import picokernel
 
-    @mini_pallas.kernel
+    @picokernel.kernel
     def k(a, b, c, o):  # 3 inputs, 1 output
       o[...] = a[...] + b[...] + c[...]
 
@@ -58,9 +58,9 @@ class TestMakeArrays:
 
   def test_make_arrays_shape(self):
     """make_arrays generates correct shapes."""
-    import mini_pallas
+    import picokernel
 
-    @mini_pallas.kernel
+    @picokernel.kernel
     def k(x, o):
       o[...] = x[...]
 
@@ -70,9 +70,9 @@ class TestMakeArrays:
 
   def test_make_arrays_dtype(self):
     """make_arrays uses correct dtype."""
-    import mini_pallas
+    import picokernel
 
-    @mini_pallas.kernel
+    @picokernel.kernel
     def k(x, o):
       o[...] = x[...]
 

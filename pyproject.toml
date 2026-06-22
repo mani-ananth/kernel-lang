@@ -1,11 +1,14 @@
 [project]
-name = "mini-pallas"
+name = "picokernel"
 version = "0.1.0"
 requires-python = ">=3.10"
 dependencies = ["numpy"]
 
 [project.optional-dependencies]
 test = ["pytest"]
+
+[tool.setuptools]
+packages = ["picokernel"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

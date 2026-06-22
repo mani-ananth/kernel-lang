@@ -7,13 +7,13 @@ When a feature is implemented, remove the xfail marker.
 import numpy as np
 import pytest
 
-import mini_pallas
+import picokernel
 
 
 @pytest.mark.xfail(strict=True, reason="__pow__ not implemented on TracerValue")
 def test_power():
   """o = x ** 2 — power operator."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, o):
     o[...] = x[...] ** 2
 
@@ -26,7 +26,7 @@ def test_power():
 @pytest.mark.xfail(strict=True, reason="__mod__ not implemented on TracerValue")
 def test_modulo():
   """o = x % 3 — modulo operator."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, o):
     o[...] = x[...] % 3
 
@@ -39,7 +39,7 @@ def test_modulo():
 @pytest.mark.xfail(strict=True, reason="np.exp bypasses tracer proxy")
 def test_numpy_exp():
   """o = np.exp(x) — numpy ufunc."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, o):
     o[...] = np.exp(x[...])
 
@@ -52,7 +52,7 @@ def test_numpy_exp():
 @pytest.mark.xfail(strict=True, reason="np.sqrt bypasses tracer proxy")
 def test_numpy_sqrt():
   """o = np.sqrt(x) — numpy ufunc."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, o):
     o[...] = np.sqrt(x[...])
 
@@ -65,7 +65,7 @@ def test_numpy_sqrt():
 @pytest.mark.xfail(strict=True, reason=".sum() not on TracerValue")
 def test_reduction_sum():
   """o = x.sum() — reduction."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, o):
     o[...] = x[...].sum()
 
@@ -78,7 +78,7 @@ def test_reduction_sum():
 @pytest.mark.xfail(strict=True, reason=".T not on TracerValue")
 def test_transpose():
   """o = x.T @ y — transpose."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, y, o):
     o[...] = x[...].T @ y[...]
 
@@ -92,7 +92,7 @@ def test_transpose():
 @pytest.mark.xfail(strict=True, reason="only [...] indexing supported")
 def test_non_ellipsis_index():
   """o = x[0:4] — slice indexing."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, o):
     o[...] = x[0:4]
 
@@ -105,7 +105,7 @@ def test_non_ellipsis_index():
 @pytest.mark.xfail(strict=True, reason="cannot branch on TracerValue")
 def test_control_flow():
   """if x > 0 — conditional branching."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, o):
     val = x[...]
     if val > 0:  # This will fail: can't convert TracerValue to bool

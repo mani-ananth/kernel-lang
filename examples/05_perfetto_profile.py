@@ -19,16 +19,16 @@ import argparse
 
 import numpy as np
 
-import mini_pallas
-from mini_pallas.profiler import Profiler
+import picokernel
+from picokernel.profiler import Profiler
 
 
-@mini_pallas.kernel
+@picokernel.kernel
 def k(a, b, c, o):
     o[...] = a[...] * b[...] + c[...]
 
 
-@mini_pallas.kernel(backend="mlx")
+@picokernel.kernel(backend="mlx")
 def k_mlx(a, b, c, o):
     o[...] = a[...] * b[...] + c[...]
 

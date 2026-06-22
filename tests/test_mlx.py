@@ -5,14 +5,14 @@ import pytest
 
 mlx = pytest.importorskip("mlx.core")
 
-import mini_pallas
-from mini_pallas.mlx_lowering import lower_to_mlx
-from mini_pallas.trace import trace_kernel
+import picokernel
+from picokernel.mlx_lowering import lower_to_mlx
+from picokernel.trace import trace_kernel
 
 
 @pytest.fixture
 def add_kernel():
-  @mini_pallas.kernel(backend="mlx")
+  @picokernel.kernel(backend="mlx")
   def k(x_ref, y_ref, o_ref):
     x, y = x_ref[...], y_ref[...]
     o_ref[...] = x + y
@@ -28,7 +28,7 @@ def test_vector_add(add_kernel):
 
 
 def test_elementwise_mul():
-  @mini_pallas.kernel(backend="mlx")
+  @picokernel.kernel(backend="mlx")
   def k(x, y, o):
     o[...] = x[...] * y[...]
 
@@ -40,7 +40,7 @@ def test_elementwise_mul():
 
 
 def test_negate():
-  @mini_pallas.kernel(backend="mlx")
+  @picokernel.kernel(backend="mlx")
   def k(x, o):
     o[...] = -x[...]
 
@@ -51,7 +51,7 @@ def test_negate():
 
 
 def test_chained_ops():
-  @mini_pallas.kernel(backend="mlx")
+  @picokernel.kernel(backend="mlx")
   def k(a, b, c, o):
     o[...] = (a[...] + b[...]) * c[...]
 
@@ -64,7 +64,7 @@ def test_chained_ops():
 
 
 def test_matrix_multiply():
-  @mini_pallas.kernel(backend="mlx")
+  @picokernel.kernel(backend="mlx")
   def k(a, b, o):
     o[...] = a[...] @ b[...]
 
@@ -76,7 +76,7 @@ def test_matrix_multiply():
 
 
 def test_scalar_const():
-  @mini_pallas.kernel(backend="mlx")
+  @picokernel.kernel(backend="mlx")
   def k(x, o):
     o[...] = x[...] * 2.0 + 1.0
 
@@ -87,7 +87,7 @@ def test_scalar_const():
 
 
 def test_numpy_array_const():
-  @mini_pallas.kernel(backend="mlx")
+  @picokernel.kernel(backend="mlx")
   def k(x, o):
     o[...] = x[...] + np.array([10.0, 20.0, 30.0])
 
@@ -98,7 +98,7 @@ def test_numpy_array_const():
 
 
 def test_retrace_on_shape_change():
-  @mini_pallas.kernel(backend="mlx")
+  @picokernel.kernel(backend="mlx")
   def k(x, o):
     o[...] = x[...] * 2.0
 
@@ -114,7 +114,7 @@ def test_retrace_on_shape_change():
 
 
 def test_lower_returns_mlx_source():
-  @mini_pallas.kernel(backend="mlx")
+  @picokernel.kernel(backend="mlx")
   def k(x, y, o):
     o[...] = x[...] + y[...]
 

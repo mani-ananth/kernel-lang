@@ -2,12 +2,12 @@
 
 import numpy as np
 
-import mini_pallas
+import picokernel
 
 
 def test_vector_add():
   """Vector addition produces correct result."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def add_kernel(x_ref, y_ref, o_ref):
     x, y = x_ref[...], y_ref[...]
     o_ref[...] = x + y
@@ -22,7 +22,7 @@ def test_vector_add():
 
 def test_matrix_multiply():
   """Matrix multiplication produces correct result."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def matmul_kernel(a_ref, b_ref, o_ref):
     a, b = a_ref[...], b_ref[...]
     o_ref[...] = a @ b
@@ -37,7 +37,7 @@ def test_matrix_multiply():
 
 def test_elementwise_sub():
   """Subtraction end-to-end."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, y, o):
     o[...] = x[...] - y[...]
 
@@ -50,7 +50,7 @@ def test_elementwise_sub():
 
 def test_elementwise_mul():
   """Multiplication end-to-end."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, y, o):
     o[...] = x[...] * y[...]
 
@@ -63,7 +63,7 @@ def test_elementwise_mul():
 
 def test_elementwise_div():
   """Division end-to-end."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, y, o):
     o[...] = x[...] / y[...]
 
@@ -76,7 +76,7 @@ def test_elementwise_div():
 
 def test_negate():
   """Negation with 2-param kernel."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, o):
     o[...] = -x[...]
 
@@ -88,7 +88,7 @@ def test_negate():
 
 def test_chained_ops():
   """Chained (a + b) * c end-to-end."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(a, b, c, o):
     o[...] = (a[...] + b[...]) * c[...]
 
@@ -103,7 +103,7 @@ def test_chained_ops():
 
 def test_dot_add():
   """(a @ b) + bias end-to-end."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(a, b, bias, o):
     o[...] = (a[...] @ b[...]) + bias[...]
 
@@ -118,7 +118,7 @@ def test_dot_add():
 
 def test_show_ir_returns_string():
   """.show_ir() returns a non-empty string."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, o):
     o[...] = x[...]
 
@@ -130,7 +130,7 @@ def test_show_ir_returns_string():
 
 def test_lower_returns_string():
   """.lower() returns a non-empty string."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, o):
     o[...] = x[...]
 
@@ -144,7 +144,7 @@ def test_lower_returns_string():
 
 def test_scalar_mul():
   """Scalar multiplication: x * 2.0."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, o):
     o[...] = x[...] * 2.0
 
@@ -156,7 +156,7 @@ def test_scalar_mul():
 
 def test_scalar_add():
   """Scalar addition: x + 1.0."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, o):
     o[...] = x[...] + 1.0
 
@@ -168,7 +168,7 @@ def test_scalar_add():
 
 def test_scalar_on_left():
   """Scalar on left side: 2.0 * x."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, o):
     o[...] = 2.0 * x[...]
 
@@ -180,7 +180,7 @@ def test_scalar_on_left():
 
 def test_scalar_sub_left():
   """Scalar on left of subtraction: 10.0 - x."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, o):
     o[...] = 10.0 - x[...]
 
@@ -192,7 +192,7 @@ def test_scalar_sub_left():
 
 def test_scalar_div():
   """Scalar division: x / 2.0."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, o):
     o[...] = x[...] / 2.0
 
@@ -204,7 +204,7 @@ def test_scalar_div():
 
 def test_numpy_array_const():
   """NumPy array as constant: x + np.array([1, 2, 3])."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, o):
     o[...] = x[...] + np.array([10.0, 20.0, 30.0])
 
@@ -216,7 +216,7 @@ def test_numpy_array_const():
 
 def test_affine_transform():
   """Affine transform: x * scale + bias with scalars."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, o):
     o[...] = x[...] * 2.0 + 1.0
 
@@ -228,7 +228,7 @@ def test_affine_transform():
 
 def test_show_ir_with_shapes():
   """show_ir with arrays shows shape information."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, y, o):
     o[...] = x[...] + y[...]
 
@@ -242,7 +242,7 @@ def test_show_ir_with_shapes():
 
 def test_show_ir_matmul_shapes():
   """show_ir shows correct matmul result shape."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(a, b, o):
     o[...] = a[...] @ b[...]
 
@@ -256,7 +256,7 @@ def test_show_ir_matmul_shapes():
 
 def test_kernel_retraces_on_shape_change():
   """Kernel retraces when input shapes change."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, o):
     o[...] = x[...] * 2.0
 
@@ -281,7 +281,7 @@ def test_kernel_retraces_on_shape_change():
 
 def test_fused_chained_ops():
   """Fused (a + b) * c produces correct result."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(a, b, c, o):
     o[...] = (a[...] + b[...]) * c[...]
 
@@ -296,7 +296,7 @@ def test_fused_chained_ops():
 
 def test_fused_scalar_constants():
   """Fused x * 2.0 + 1.0 produces correct result."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, o):
     o[...] = x[...] * 2.0 + 1.0
 
@@ -308,7 +308,7 @@ def test_fused_scalar_constants():
 
 def test_fused_broadcasting_2d_1d():
   """Fused 2D + 1D with broadcasting produces correct result."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, y, o):
     o[...] = x[...] + y[...]
 
@@ -322,7 +322,7 @@ def test_fused_broadcasting_2d_1d():
 
 def test_fused_matmul_plus_bias():
   """Matmul + bias: MATMUL unfused, ADD fused, correct result."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(a, b, bias, o):
     o[...] = (a[...] @ b[...]) + bias[...]
 
@@ -337,7 +337,7 @@ def test_fused_matmul_plus_bias():
 
 def test_fused_negation_chain():
   """Fused -(x + y) produces correct result."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, y, o):
     o[...] = -(x[...] + y[...])
 
@@ -352,7 +352,7 @@ def test_fused_negation_chain():
 
 def test_fused_2d_correctness():
   """Fused 2D element-wise operations produce correct results."""
-  @mini_pallas.kernel
+  @picokernel.kernel
   def k(x, y, o):
     o[...] = (x[...] + y[...]) * x[...]
 

@@ -1,4 +1,4 @@
-# mini_pallas
+# picokernel
 
 A minimal kernel language that compiles Python functions to NumPy or MLX — built to understand how array compiler pipelines work from tracing through code generation.
 
@@ -8,13 +8,13 @@ Inspired by [JAX Pallas](https://jax.readthedocs.io/en/latest/pallas/index.html)
 
 ## What it does
 
-You write a kernel function using array references. mini_pallas traces it into an SSA IR, lowers it to executable code, and runs it — with guard-based retracing when shapes change, just like JAX or `torch.compile`.
+You write a kernel function using array references. picokernel traces it into an SSA IR, lowers it to executable code, and runs it — with guard-based retracing when shapes change, just like JAX or `torch.compile`.
 
 ```python
 import numpy as np
-import mini_pallas
+import picokernel
 
-@mini_pallas.kernel
+@picokernel.kernel
 def add(x_ref, y_ref, o_ref):
     o_ref[...] = x_ref[...] + y_ref[...]
 
@@ -29,7 +29,7 @@ add(x, y, out)
 Switch backends with a single decorator argument:
 
 ```python
-@mini_pallas.kernel(backend="mlx")   # Apple GPU via Metal
+@picokernel.kernel(backend="mlx")   # Apple GPU via Metal
 def add_gpu(x_ref, y_ref, o_ref):
     o_ref[...] = x_ref[...] + y_ref[...]
 ```
@@ -66,7 +66,7 @@ callable
 You can inspect every stage:
 
 ```python
-@mini_pallas.kernel
+@picokernel.kernel
 def fma(a, b, c, o):
     o[...] = a[...] * b[...] + c[...]
 
@@ -142,7 +142,7 @@ MLX wins when you chain operations in device-space without converting back to Nu
 
 ## Profiling
 
-mini_pallas has a built-in profiler that emits [Perfetto](https://ui.perfetto.dev) / Chrome Trace Event JSON.
+picokernel has a built-in profiler that emits [Perfetto](https://ui.perfetto.dev) / Chrome Trace Event JSON.
 
 ```python
 # Profile a single backend
@@ -150,7 +150,7 @@ p = fma.run_profiled(a, b, c, o, n_repeats=5)
 p.save("trace.json")   # open in ui.perfetto.dev
 
 # Compare both backends
-from mini_pallas.profiler import Profiler
+from picokernel.profiler import Profiler
 
 p_numpy = fma.run_profiled(a, b, c, o, n_repeats=5)
 p_mlx   = fma_mlx.run_profiled(a, b, c, o, n_repeats=5)

@@ -3,17 +3,17 @@
 import numpy as np
 import pytest
 
-import mini_pallas
-from mini_pallas.lowering import lower_to_numpy
-from mini_pallas.trace import trace_kernel
+import picokernel
+from picokernel.lowering import lower_to_numpy
+from picokernel.trace import trace_kernel
 
 
 def make(fn, *shapes):
-  return mini_pallas.KernelFunction(fn, backend="numpy")
+  return picokernel.KernelFunction(fn, backend="numpy")
 
 
 def test_vector_add():
-  @mini_pallas.kernel(backend="numpy")
+  @picokernel.kernel(backend="numpy")
   def k(x, y, o):
     o[...] = x[...] + y[...]
 
@@ -23,7 +23,7 @@ def test_vector_add():
 
 
 def test_mul_add_chain():
-  @mini_pallas.kernel(backend="numpy")
+  @picokernel.kernel(backend="numpy")
   def k(a, b, c, o):
     o[...] = a[...] * b[...] + c[...]
 
@@ -34,7 +34,7 @@ def test_mul_add_chain():
 
 
 def test_negation_chain():
-  @mini_pallas.kernel(backend="numpy")
+  @picokernel.kernel(backend="numpy")
   def k(x, y, o):
     o[...] = -(x[...] + y[...])
 
@@ -45,7 +45,7 @@ def test_negation_chain():
 
 
 def test_matmul():
-  @mini_pallas.kernel(backend="numpy")
+  @picokernel.kernel(backend="numpy")
   def k(a, b, o):
     o[...] = a[...] @ b[...]
 
@@ -57,7 +57,7 @@ def test_matmul():
 
 
 def test_load_only():
-  @mini_pallas.kernel(backend="numpy")
+  @picokernel.kernel(backend="numpy")
   def k(x, o):
     o[...] = x[...]
 
@@ -68,7 +68,7 @@ def test_load_only():
 
 
 def test_scalar_const():
-  @mini_pallas.kernel(backend="numpy")
+  @picokernel.kernel(backend="numpy")
   def k(x, o):
     o[...] = x[...] * 2.0 + 1.0
 
@@ -79,7 +79,7 @@ def test_scalar_const():
 
 
 def test_numpy_array_const():
-  @mini_pallas.kernel(backend="numpy")
+  @picokernel.kernel(backend="numpy")
   def k(x, o):
     o[...] = x[...] + np.array([10., 20., 30.])
 
@@ -90,7 +90,7 @@ def test_numpy_array_const():
 
 
 def test_matmul_plus_bias():
-  @mini_pallas.kernel(backend="numpy")
+  @picokernel.kernel(backend="numpy")
   def k(a, b, bias, o):
     o[...] = (a[...] @ b[...]) + bias[...]
 
@@ -103,7 +103,7 @@ def test_matmul_plus_bias():
 
 
 def test_lower_shows_out_param():
-  @mini_pallas.kernel(backend="numpy")
+  @picokernel.kernel(backend="numpy")
   def k(x, y, o):
     o[...] = x[...] + y[...]
 

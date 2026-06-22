@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import numpy as np
-import mini_pallas
+import picokernel
 
 
-@mini_pallas.kernel
+@picokernel.kernel
 def add_vectors_kernel(x_ref, y_ref, o_ref):
   x, y = x_ref[...], y_ref[...]
   o_ref[...] = x + y

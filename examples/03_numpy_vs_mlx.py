@@ -5,15 +5,15 @@ import time
 
 import numpy as np
 
-import mini_pallas
+import picokernel
 
 
-@mini_pallas.kernel
+@picokernel.kernel
 def numpy_kernel(a, b, c, o):
   o[...] = (a[...] + b[...]) * c[...]
 
 
-@mini_pallas.kernel(backend="mlx")
+@picokernel.kernel(backend="mlx")
 def mlx_kernel(a, b, c, o):
   o[...] = (a[...] + b[...]) * c[...]
 
